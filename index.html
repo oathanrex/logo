@@ -3,9 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Animated Gradient Ring Video</title>
+  <title>Oathan Rex Logo</title>
   <style>
-    * {
+    /* ============================================
+       CSS Custom Properties (Easy Customization)
+       ============================================ */
+    :root {
+      /* Dimensions */
+      --ring-size: 300px;
+      --ring-thickness: 6px;
+      --video-size: calc(var(--ring-size) - var(--ring-thickness) * 2);
+      
+      /* Colors */
+      --gradient-color-1: #ff6b35;
+      --gradient-color-2: #f7931e;
+      --gradient-color-3: #ffcc00;
+      --gradient-color-4: #ff3366;
+      --bg-color: #000000;
+      
+      /* Animation */
+      --rotation-speed: 2s;
+      --pulse-speed: 1.5s;
+      
+      /* Glow */
+      --glow-blur-inner: 15px;
+      --glow-blur-outer: 30px;
+      --glow-opacity: 0.6;
+    }
+
+    /* ============================================
+       Reset & Base Styles
+       ============================================ */
+    *,
+    *::before,
+    *::after {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -16,113 +47,443 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background-color: #000;
+      background-color: var(--bg-color);
+      font-family: system-ui, -apple-system, sans-serif;
     }
-    
-    .video-wrapper {
+
+    /* ============================================
+       Reduced Motion Support (Accessibility)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ============================================
+       Video Component Container
+       ============================================ */
+    .video-ring {
       position: relative;
-      width: 300px;
-      height: 300px;
+      width: var(--ring-size);
+      height: var(--ring-size);
       display: flex;
       justify-content: center;
       align-items: center;
     }
-    
-    /* Animated Gradient Ring Container */
-    .gradient-ring {
+
+    /* ============================================
+       Animated Gradient Ring
+       ============================================ */
+    .video-ring__gradient {
       position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       border-radius: 50%;
+      
+      /* Conic gradient for smooth rotation */
       background: conic-gradient(
         from 0deg,
-        #ff6b35,
-        #f7931e,
-        #ffcc00,
-        #ff6b35,
-        #f7931e,
-        #ff3366,
-        #ff6b35
+        var(--gradient-color-1),
+        var(--gradient-color-2),
+        var(--gradient-color-3),
+        var(--gradient-color-1),
+        var(--gradient-color-4),
+        var(--gradient-color-2),
+        var(--gradient-color-1)
       );
-      animation: rotate-gradient 2s linear infinite;
+      
+      /* Performance optimization */
+      will-change: transform;
+      transform: translateZ(0);
+      
+      /* Animation */
+      animation: rotate var(--rotation-speed) linear infinite;
     }
     
-    /* Glow Effect */
-    .gradient-ring::before {
+    /* Inner Glow Effect */
+    .video-ring__gradient::before {
       content: '';
       position: absolute;
-      inset: -5px;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
       border-radius: 50%;
       background: inherit;
-      filter: blur(20px);
-      opacity: 0.7;
+      filter: blur(var(--glow-blur-inner));
+      opacity: var(--glow-opacity);
       z-index: -1;
+      
+      /* Prevent blur from affecting performance too much */
+      will-change: opacity;
     }
     
-    /* Outer Glow Pulse */
-    .gradient-ring::after {
+    /* Outer Glow Effect (Pulse) */
+    .video-ring__gradient::after {
       content: '';
       position: absolute;
-      inset: -15px;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
       border-radius: 50%;
       background: inherit;
-      filter: blur(40px);
-      opacity: 0.4;
+      filter: blur(var(--glow-blur-outer));
+      opacity: calc(var(--glow-opacity) * 0.5);
       z-index: -2;
-      animation: pulse-glow 1.5s ease-in-out infinite alternate;
+      animation: pulse var(--pulse-speed) ease-in-out infinite alternate;
     }
-    
-    /* Main Video Circle - Directly on top of gradient */
-    .video-circle {
-      width: 290px;
-      height: 290px;
+
+    /* ============================================
+       Video Container
+       ============================================ */
+    .video-ring__video-container {
+      position: relative;
+      width: var(--video-size);
+      height: var(--video-size);
       border-radius: 50%;
       overflow: hidden;
-      position: relative;
       z-index: 1;
+      
+      /* Smooth edges */
+      -webkit-mask-image: radial-gradient(circle, white 100%, black 100%);
+      mask-image: radial-gradient(circle, white 100%, black 100%);
     }
-    
-    .video-circle video {
+
+    /* ============================================
+       Video Element
+       ============================================ */
+    .video-ring__video {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+      
+      /* Remove default controls styling */
+      background: transparent;
     }
     
-    /* Animations */
-    @keyframes rotate-gradient {
-      0% {
-        transform: rotate(0deg);
+    /* Hide video before load */
+    .video-ring__video:not([data-loaded]) {
+      opacity: 0;
+    }
+    
+    .video-ring__video[data-loaded] {
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    /* ============================================
+       Loading State
+       ============================================ */
+    .video-ring__loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      color: var(--gradient-color-2);
+      font-size: 14px;
+      text-align: center;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .video-ring__loader-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--gradient-color-2);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    
+    .video-ring[data-loaded] .video-ring__loader {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ============================================
+       Error State
+       ============================================ */
+    .video-ring__error {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      color: #ff4444;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    
+    .video-ring[data-error] .video-ring__error {
+      display: block;
+    }
+    
+    .video-ring[data-error] .video-ring__loader {
+      display: none;
+    }
+    
+    .video-ring__error-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    
+    .video-ring__retry-btn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: var(--gradient-color-1);
+      border: none;
+      border-radius: 20px;
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    
+    .video-ring__retry-btn:hover {
+      background: var(--gradient-color-4);
+      transform: scale(1.05);
+    }
+    
+    .video-ring__retry-btn:focus {
+      outline: 2px solid var(--gradient-color-2);
+      outline-offset: 2px;
+    }
+
+    /* ============================================
+       Animations
+       ============================================ */
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg) translateZ(0);
       }
-      100% {
+      to {
+        transform: rotate(360deg) translateZ(0);
+      }
+    }
+    
+    @keyframes pulse {
+      from {
+        opacity: 0.2;
+        transform: scale(1);
+      }
+      to {
+        opacity: 0.5;
+        transform: scale(1.05);
+      }
+    }
+    
+    @keyframes spin {
+      to {
         transform: rotate(360deg);
       }
     }
+
+    /* ============================================
+       Fallback for older browsers
+       ============================================ */
+    @supports not (background: conic-gradient(red, blue)) {
+      .video-ring__gradient {
+        background: linear-gradient(
+          45deg,
+          var(--gradient-color-1),
+          var(--gradient-color-2),
+          var(--gradient-color-3),
+          var(--gradient-color-1)
+        );
+        background-size: 300% 300%;
+        animation: gradient-shift var(--rotation-speed) ease infinite;
+      }
+      
+      @keyframes gradient-shift {
+        0%, 100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+    }
+
+    /* ============================================
+       Size Variants (Scalability)
+       ============================================ */
+    .video-ring--small {
+      --ring-size: 200px;
+      --ring-thickness: 4px;
+      --glow-blur-inner: 10px;
+      --glow-blur-outer: 20px;
+    }
     
-    @keyframes pulse-glow {
-      0% {
-        opacity: 0.3;
-        transform: scale(1);
-      }
-      100% {
-        opacity: 0.6;
-        transform: scale(1.1);
-      }
+    .video-ring--large {
+      --ring-size: 400px;
+      --ring-thickness: 8px;
+      --glow-blur-inner: 20px;
+      --glow-blur-outer: 40px;
+    }
+
+    /* ============================================
+       Color Variants
+       ============================================ */
+    .video-ring--blue {
+      --gradient-color-1: #00d4ff;
+      --gradient-color-2: #0099ff;
+      --gradient-color-3: #00ffcc;
+      --gradient-color-4: #0066ff;
+    }
+    
+    .video-ring--purple {
+      --gradient-color-1: #a855f7;
+      --gradient-color-2: #ec4899;
+      --gradient-color-3: #8b5cf6;
+      --gradient-color-4: #d946ef;
     }
   </style>
 </head>
 <body>
-  <div class="video-wrapper">
-    <!-- Animated Gradient Ring -->
-    <div class="gradient-ring"></div>
+  
+  <!-- Video Ring Component -->
+  <div class="video-ring" role="img" aria-label="Animated logo video with glowing ring effect">
     
-    <!-- Video Circle -->
-    <div class="video-circle">
-      <video autoplay loop muted playsinline>
-        <source src="https://raw.githubusercontent.com/oathanrex/logo/main/logo_video.mp4" type="video/mp4">
-        Your browser does not support video.
+    <!-- Animated Gradient Ring -->
+    <div class="video-ring__gradient" aria-hidden="true"></div>
+    
+    <!-- Loading State -->
+    <div class="video-ring__loader" aria-live="polite">
+      <div class="video-ring__loader-spinner"></div>
+      <span>Loading...</span>
+    </div>
+    
+    <!-- Error State -->
+    <div class="video-ring__error" role="alert">
+      <div class="video-ring__error-icon">⚠️</div>
+      <div>Failed to load video</div>
+      <button class="video-ring__retry-btn" onclick="retryVideo()">
+        Retry
+      </button>
+    </div>
+    
+    <!-- Video Container -->
+    <div class="video-ring__video-container">
+      <video 
+        class="video-ring__video"
+        autoplay 
+        loop 
+        muted 
+        playsinline
+        poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23111'/%3E%3C/svg%3E"
+        aria-hidden="true"
+      >
+        <source 
+          src="https://raw.githubusercontent.com/oathanrex/logo/main/logo_video.mp4" 
+          type="video/mp4"
+        >
+        <!-- Fallback message -->
+        Your browser does not support HTML5 video.
       </video>
     </div>
+    
   </div>
+
+  <!-- JavaScript for Error Handling & State Management -->
+  <script>
+    (function() {
+      'use strict';
+      
+      // DOM Elements
+      const videoRing = document.querySelector('.video-ring');
+      const video = document.querySelector('.video-ring__video');
+      
+      // State Management
+      const setState = {
+        loaded: () => {
+          videoRing.setAttribute('data-loaded', '');
+          video.setAttribute('data-loaded', '');
+          videoRing.removeAttribute('data-error');
+        },
+        error: () => {
+          videoRing.setAttribute('data-error', '');
+          videoRing.removeAttribute('data-loaded');
+        },
+        loading: () => {
+          videoRing.removeAttribute('data-loaded');
+          videoRing.removeAttribute('data-error');
+        }
+      };
+      
+      // Event Listeners
+      video.addEventListener('loadeddata', function() {
+        setState.loaded();
+        console.log('Video loaded successfully');
+      });
+      
+      video.addEventListener('canplaythrough', function() {
+        setState.loaded();
+      });
+      
+      video.addEventListener('error', function(e) {
+        setState.error();
+        console.error('Video loading error:', e);
+      });
+      
+      // Handle network issues
+      video.addEventListener('stalled', function() {
+        console.warn('Video loading stalled');
+      });
+      
+      // Intersection Observer for performance
+      // Only animate when visible
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            const gradient = entry.target.querySelector('.video-ring__gradient');
+            if (entry.isIntersecting) {
+              gradient.style.animationPlayState = 'running';
+              if (video.paused) video.play().catch(() => {});
+            } else {
+              gradient.style.animationPlayState = 'paused';
+              video.pause();
+            }
+          });
+        }, { threshold: 0.1 });
+        
+        observer.observe(videoRing);
+      }
+      
+      // Retry function (global for onclick)
+      window.retryVideo = function() {
+        setState.loading();
+        video.load();
+        video.play().catch(() => {});
+      };
+      
+      // Reduced motion preference detection
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      
+      function handleMotionPreference(e) {
+        if (e.matches) {
+          document.querySelectorAll('.video-ring__gradient').forEach(el => {
+            el.style.animation = 'none';
+          });
+        }
+      }
+      
+      prefersReducedMotion.addEventListener('change', handleMotionPreference);
+      handleMotionPreference(prefersReducedMotion);
+      
+    })();
+  </script>
+
 </body>
 </html>
